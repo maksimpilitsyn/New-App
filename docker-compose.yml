@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # 1. БД (PostgreSQL)
+  database:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: pilicyn
+      POSTGRES_PASSWORD: pass123
+      POSTGRES_DB: twitter_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # 2. Бэкенд (Python)
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+    environment:
+      DB_USER: pilicyn
+      DB_PASSWORD: pass123
+      DB_NAME: twitter_db
+    depends_on:
+      - database
+    networks:
+      - app-network
+
+  # 3. Фронтенд (Nginx)
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "8081:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+    networks:
+      - app-network
+
+  # 4. Мониторинг (Prometheus)
+  monitoring:
+    image: prom/prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db_data:

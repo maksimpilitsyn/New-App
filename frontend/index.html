@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>DevOps Twitter 2.0</title>
+    <style>
+        body { display: flex; flex-direction: column; align-items: center; font-family: sans-serif; background: #f0f2f5; }
+        #app { width: 500px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 50px; }
+        textarea { width: 100%; border: 1px solid #ddd; border-radius: 4px; padding: 10px; resize: none; }
+        .post { border-bottom: 1px solid #eee; padding: 15px 0; position: relative; }
+        .post img { max-width: 100%; border-radius: 8px; margin-top: 10px; }
+        .edit-area { display: none; flex-direction: column; gap: 5px; }
+        button { cursor: pointer; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Mini Twitter</h1>
+        <textarea id="postContent" rows="3" placeholder="Что нового? (Минимум 1 символ)"></textarea>
+        <input type="file" id="imageInput" accept="image/*" style="width:100%; margin-top:5px;">
+        <button onclick="sendPost()" style="width:100%; background: #1877f2; color: white; border: none; padding: 10px; border-radius: 4px;">Опубликовать</button>
+        <div id="posts"></div>
+    </div>
+
+    <script>
+        const isValid = (str) => str && str.trim().length > 0;
+
+        // ПОЛНОСТЬЮ ОБНОВЛЕННАЯ ФУНКЦИЯ
+        async function sendPost() {
+            const contentInput = document.getElementById('postContent');
+            const fileInput = document.getElementById('imageInput');
+            const content = contentInput.value;
+            let image_url = "";
+
+            if (!isValid(content)) return alert("Нельзя отправить пустоту!");
+
+            // 1. Если файл выбран, сначала загружаем его на бэкенд
+            if (fileInput.files.length > 0) {
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                
+                try {
+                    const uploadRes = await fetch('http://localhost:5000/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const uploadData = await uploadRes.json();
+                    image_url = uploadData.image_url; 
+                } catch (e) {
+                    return alert("Ошибка при загрузке картинки");
+                }
+            }
+
+            // 2. Отправляем сам пост с текстом и ссылкой на файл
+            const response = await fetch('http://localhost:5000/posts', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({content, image_url})
+            });
+
+            if (response.ok) {
+                contentInput.value = '';
+                fileInput.value = ''; // Очищаем выбор файла
+                await loadPosts();
+            } else {
+                alert("Ошибка при сохранении поста на сервере");
+            }
+        }
+
+        function toggleEdit(id) {
+            const view = document.getElementById(`view-${id}`);
+            const edit = document.getElementById(`edit-${id}`);
+            const isEditing = view.style.display === 'none';
+            view.style.display = isEditing ? 'block' : 'none';
+            edit.style.display = isEditing ? 'none' : 'flex';
+        }
+
+        async function saveEdit(id) {
+            const newContent = document.getElementById(`input-${id}`).value;
+            const newImg = document.getElementById(`img-input-${id}`).value;
+            if (!isValid(newContent)) return alert("Текст не может быть пустым!");
+
+            await fetch(`http://localhost:5000/posts/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({content: newContent, image_url: newImg})
+            });
+            loadPosts();
+        }
+
+        async function loadPosts() {
+            try {
+                const res = await fetch('http://localhost:5000/posts');
+                const posts = await res.json();
+                const div = document.getElementById('posts');
+                div.innerHTML = posts.reverse().map(p => `
+                    <div class="post">
+                        <div id="view-${p.id}">
+                            <p>${p.content}</p>
+                            ${p.image_url ? `<img src="${p.image_url}">` : ''}
+                            <br><button onclick="toggleEdit(${p.id})">Редактировать</button>
+                        </div>
+                        <div id="edit-${p.id}" class="edit-area">
+                            <textarea id="input-${p.id}" rows="3">${p.content}</textarea>
+                            <input type="text" id="img-input-${p.id}" value="${p.image_url || ''}" placeholder="URL картинки">
+                            <button onclick="saveEdit(${p.id})">Сохранить</button>
+                            <button onclick="toggleEdit(${p.id})">Отмена</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.log("Ожидание запуска бэкенда...");
+            }
+        }
+
+        setInterval(loadPosts, 3000);
+        loadPosts();
+    </script>
+</body>
+</html>
