@@ -40,14 +40,14 @@ services:
       - app-network
 
   # 4. Мониторинг (Prometheus)
-#  monitoring:
-#    image: prom/prometheus
-#    ports:
-#      - "9091:9090"
-#    volumes:
-#      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-#    networks:
-#      - app-network
+  monitoring:
+    image: prom/prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - app-network
 
 networks:
   app-network:
