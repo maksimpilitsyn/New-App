@@ -40,7 +40,7 @@
                 formData.append('file', fileInput.files[0]);
                 
                 try {
-                    const uploadRes = await fetch('http://localhost:5000/upload', {
+                    const uploadRes = await fetch('http://localhost:5001/upload', {
                         method: 'POST',
                         body: formData
                     });
