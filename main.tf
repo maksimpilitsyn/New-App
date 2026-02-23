@@ -8,7 +8,8 @@ terraform {
 }
 
 provider "docker" {
-  host = "unix:///var/run/docker.sock"
+  host        = "unix:///var/run/docker.sock"
+  api_version = "1.44" # ЭТА СТРОКА РЕШАЕТ ВСЁ
 }
 
 resource "docker_container" "backend" {
