@@ -52,7 +52,7 @@
             }
 
             // 2. Отправляем сам пост с текстом и ссылкой на файл
-            const response = await fetch('http://localhost:5000/posts', {
+            const response = await fetch('http://localhost:5001/posts', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({content, image_url})
@@ -80,7 +80,7 @@
             const newImg = document.getElementById(`img-input-${id}`).value;
             if (!isValid(newContent)) return alert("Текст не может быть пустым!");
 
-            await fetch(`http://localhost:5000/posts/${id}`, {
+            await fetch(`http://localhost:5001/posts/${id}`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({content: newContent, image_url: newImg})
@@ -90,7 +90,7 @@
 
         async function loadPosts() {
             try {
-                const res = await fetch('http://localhost:5000/posts');
+                const res = await fetch('http://localhost:5001/posts');
                 const posts = await res.json();
                 const div = document.getElementById('posts');
                 div.innerHTML = posts.reverse().map(p => `
