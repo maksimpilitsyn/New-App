@@ -12,8 +12,11 @@ provider "docker" {
 }
 
 resource "docker_network" "app_network" {
-  name = "app-network"
+  name     = "app-network"
+  external = true
 }
+
+
 # Пример ресурса для фронтенда
 resource "docker_container" "frontend" {
   name  = "twitter-deploy-frontend-1"
