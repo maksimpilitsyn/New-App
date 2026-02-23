@@ -11,23 +11,19 @@ provider "docker" {
   host = "unix:///var/run/docker.sock"
 }
 
-resource "docker_network" "app_network" {
-  name = "app-network"
-  check_duplicate = true
-}
-
-
-# Пример ресурса для фронтенда
 resource "docker_container" "frontend" {
   name  = "twitter-deploy-frontend-1"
-  image = "twitter-deploy-frontend:latest" # Образ должен быть собран в Jenkins
+  image = "twitter-deploy-frontend:latest"
+  
   ports {
     internal = 80
     external = 8082
   }
+
+  # Просто указываем имя, не ссылаясь на ресурс Terraform
   networks_advanced {
-    name = docker_network.app_network.name
+    name = "app-network"
   }
 }
 
-# Аналогично добавь ресурсы для backend и database...
+# Если есть backend, сделай аналогично для него
