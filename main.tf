@@ -7,7 +7,9 @@ terraform {
   }
 }
 
-provider "docker" {}
+provider "docker" {
+  host = "unix:///var/run/docker.sock"
+}
 
 resource "docker_network" "app_network" {
   name = "app-network"
