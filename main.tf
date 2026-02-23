@@ -12,8 +12,8 @@ provider "docker" {
 }
 
 resource "docker_network" "app_network" {
-  name     = "app-network"
-  external = true
+  name = "app-network"
+  check_duplicate = true
 }
 
 
