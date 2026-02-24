@@ -27,11 +27,3 @@ resource "terraform_data" "frontend" {
     command = "docker rm -f twitter-deploy-frontend-1 || true && docker run -d --name twitter-deploy-frontend-1 --network app-network -p 8082:80 ${self.input}"
   }
 }
-
-# 4. Monitoring
-resource "terraform_data" "monitoring" {
-  input = "prom/prometheus:latest"
-  provisioner "local-exec" {
-    command = "docker rm -f twitter-deploy-monitoring-1 || true && docker run -d --name twitter-deploy-monitoring-1 --network app-network -p 9090:9090 prom/prometheus:latest"
-  }
-}
