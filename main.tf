@@ -1,37 +1,31 @@
 terraform {
-  required_providers {
-    docker = {
-      source  = "kreuzwerker/docker"
-      version = "~> 3.0.2"
-    }
+  required_version = ">= 1.14.5"
+}
+
+# Используем terraform_data для управления контейнерами через системный Docker CLI
+# Это гарантирует, что версия API всегда будет актуальной (1.45+)
+
+resource "terraform_data" "backend" {
+  # Следим за образом. Если образ обновится, команда выполнится снова.
+  input = "twitter-deploy-backend:latest"
+
+  provisioner "local-exec" {
+    command = <<EOT
+      docker rm -f twitter-deploy-backend-1 || true
+      docker run -d --name twitter-deploy-backend-1 --network app-network ${self.input}
+    EOT
   }
 }
 
-provider "docker" {
-  host = "unix:///var/run/docker.sock"
-}
-
-resource "docker_container" "backend" {
-  name  = "twitter-deploy-backend-1"
-  image = "twitter-deploy-backend:latest"
-  restart = "always"
+resource "terraform_data" "frontend" {
+  input = "twitter-deploy-frontend:latest"
   
-  networks_advanced {
-    name = "app-network"
-  }
-}
+  depends_on = [terraform_data.backend]
 
-resource "docker_container" "frontend" {
-  name  = "twitter-deploy-frontend-1"
-  image = "twitter-deploy-frontend:latest"
-  restart = "always"
-  
-  ports {
-    internal = 80
-    external = 8082
-  }
-
-  networks_advanced {
-    name = "app-network"
+  provisioner "local-exec" {
+    command = <<EOT
+      docker rm -f twitter-deploy-frontend-1 || true
+      docker run -d --name twitter-deploy-frontend-1 --network app-network -p 8082:80 ${self.input}
+    EOT
   }
 }
